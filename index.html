@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Model</title>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<base target="_blank">
+<link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
+<style type="text/css">
+#popup, #header, #layerpanel {
+  left: 36px;
+}
+</style>
+<script src="./threejs/three.min.js"></script>
+<script src="./threejs/OrbitControls.js"></script>
+<script src="./threejs/ViewHelper.js"></script>
+<script src="./Qgis2threejs.js"></script>
+<script src="./meshline/THREE.MeshLine.js"></script>
+<script src="./threejs/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+<div id="view">
+  <div id="northarrow"></div>
+  <div id="navigation"></div>
+</div>
+
+<!-- zoom buttons -->
+<div id="zoomButtons">
+  <button id="zoomIn">+</button>
+  <button id="zoomOut">-</button>
+</div>
+
+
+<!-- popup -->
+<div id="popup">
+  <div id="closebtn">&times;</div>
+  <div id="popupbar"></div>
+  <div id="popupbody">
+    <div id="popupcontent"></div>
+
+    <!-- query result -->
+    <div id="queryresult">
+      <table id="qr_coords_table">
+        <caption>Clicked coordinates <div id="zoomtopoint" class="action-zoom zoombtn"></div></caption>
+        <tr><td id="qr_coords"></td></tr>
+      </table>
+
+      <table id="qr_layername_table">
+        <caption>Layer <div id="zoomtolayer" class="action-zoom zoombtn"></div></caption>
+        <tr><td id="qr_layername"></td></tr>
+      </table>
+
+      <table id="qr_attrs_table">
+        <caption>Attributes</caption>
+      </table>
+
+      <!-- camera actions and measure tool -->
+      <div id="orbitbtn" class="action-btn action-orbit">Orbit</div>
+      <div id="measurebtn" class="action-btn">Measure distance</div>
+    </div>
+
+    <!-- page info -->
+    <div id="pageinfo">
+      <h1>Current View URL</h1>
+      <div><input id="urlbox" type="text"></div>
+
+      <h1>Usage</h1>
+      <table id="usage">
+        <tr><td colspan="2" class="star">Mouse</td></tr>
+        <tr><td>Left button + Move</td><td>Orbit</td></tr>
+        <tr><td>Mouse Wheel</td><td>Zoom</td></tr>
+        <tr><td>Right button + Move</td><td>Pan</td></tr>
+
+        <tr><td colspan="2" class="star">Keys</td></tr>
+        <tr><td>Arrow keys</td><td>Move Horizontally</td></tr>
+        <tr><td>Shift + Arrow keys</td><td>Orbit</td></tr>
+        <tr><td>Ctrl + Arrow keys</td><td>Rotate</td></tr>
+        <tr><td>Shift + Ctrl + Up / Down</td><td>Zoom In / Out</td></tr>
+        <tr><td>L</td><td>Toggle Label Visibility</td></tr>
+        <tr><td>R</td><td>Start / Stop Orbit Animation</td></tr>
+        <tr><td>W</td><td>Wireframe Mode</td></tr>
+        <tr><td>Shift + R</td><td>Reset Camera Position</td></tr>
+        <tr><td>Shift + S</td><td>Save Image</td></tr>
+      </table>
+
+      <h1>About</h1>
+      <div id="about"><img src="./Qgis2threejs.png">
+        This page was made with <a href="https://www.qgis.org/">QGIS</a> and <a href="https://github.com/minorua/Qgis2threejs">Qgis2threejs</a> plugin (version 2.8).
+        <div>Powered by <a href="https://threejs.org/">three.js</a>
+        <span id="lib_proj4js"> and <a href="https://trac.osgeo.org/proj4js/">Proj4js</a></span>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- progress bar -->
+<div id="progress"><div id="progressbar"></div></div>
+
+<!-- menu -->
+<div id="toolbtns">
+  <div id="layerbtn"></div>
+  <div id="animbtn" class="hidden"></div>
+  <div id="infobtn"></div>
+</div>
+
+
+<!-- header  -->
+<header id="header">
+  <img src="./logoverispatial.png" alt="VeriSpatial Logo" id="header-logo">
+  <div class="header-text">
+    <span class="header-title">VeriSpatial</span>
+    <span class="header-subtitle">University of Pretoria Interactive 3D Model</span>
+  </div>
+</header>
+
+<div id="weather" style="
+  position: absolute;
+  top: 90px;
+  right: 20px;
+  color: rgb(0, 0, 0);
+  text-align: center;
+  font-family: Arial, sans-serif;
+  background:rgba(255, 255, 255, 0.812); 
+  padding:10px; 
+  border-radius:10px; 
+  width:150px;
+  z-index: 1000;
+">
+  <div id="weather-info" style="display: inline-block; margin-left: 8px;">
+    <span id="weather-location-text"></span><br>
+      <img id="weather-icon-img" src="" alt="Weather icon" width="50" height="50" style="vertical-align: middle;">
+    <span id="weather-temp-text"></span><br>
+    <span id="weather-desc-text" style="text-transform: capitalize;"></span>
+  </div>
+</div>
+
+<!-- Sun Slider -->
+<!-- Sun Slider -->
+<div id="sunControls">
+  <label for="sunSlider">Sun Position (6AM - 6PM)</label><br>
+  <input type="range" id="sunSlider" min="6" max="18" step="0.1" value="12">
+  <span id="sunTimeLabel">12:00 PM</span>
+</div>
+
+<!-- Scale Bar - Bottom Right -->
+<div id="scaleBarContainer" style="
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    width: auto;
+    text-align: right;
+    right: 700px;
+    color: rgb(5, 101, 57);
+    font-family: Arial, sans-serif;
+    z-index: 1000;
+    border-radius: 8px;
+   
+
+">
+  <div id="scaleBar" style="
+      height: 6px;
+      background: rgba(0, 0, 0, 0);
+      border-radius: 3px;
+      margin-bottom: 4px;
+      transition: width 0.1s ease-out;
+  "></div>
+  <div id="scaleLabel" style="
+      font-size: 20px;
+      background: rgba(255, 255, 255, 0.759);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: inline-block;
+  ">10 m</div>
+</div>
+
+
+
+
+<!-- layer panel -->
+<div id="layerpanel">
+  <div id="layerlist"></div>
+</div>
+
+<!-- animation -->
+<div id="narrativebox" class="ef1">
+  <div id="narbody">
+
+  </div>
+  <div id="nextbtn"></div>
+</div>
+
+<script>
+Q3D.Config.allVisible = true;
+Q3D.Config.bgColor = 0xd6ffc1;
+Q3D.Config.localMode = true;
+Q3D.Config.northArrow.enabled = true;
+Q3D.Config.northArrow.color = 0x000000;
+
+var container = document.getElementById("view"),
+    app = Q3D.application;
+
+// initialize viewer
+app.init(container);
+
+// Create lights
+var sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 500;
+sun.shadow.bias = -0.0005;
+app.scene.add(sun);
+
+var ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+app.scene.add(ambientLight);
+
+// Sun slider references
+var sunSlider = document.getElementById("sunSlider");
+var sunTimeLabel = document.getElementById("sunTimeLabel");
+
+function updateSun(hour, modelCenter, modelSize) {
+    var displayHour = Math.floor(hour % 12) || 12;
+    var period = (hour < 12) ? "AM" : "PM";
+    sunTimeLabel.textContent = displayHour + ":00 " + period;
+
+    // Move sun along an arc
+    var theta = ((hour - 6) / 12) * Math.PI;
+    var radius = Math.max(modelSize.x, modelSize.y, modelSize.z) * 1.5;
+    sun.position.set(radius * Math.cos(theta), radius * Math.sin(theta), modelSize.z * 1.2);
+    sun.lookAt(modelCenter);
+
+    sun.intensity = Math.max(0.1, 0.6 + 0.4 * Math.sin(theta));
+    ambientLight.intensity = Math.max(0.05, 0.1 + 0.25 * Math.sin(theta));
+
+    app.renderer.render(app.scene, app.camera);
+}
+
+// Load scene
+app.loadSceneFile("./data/index/scene.js", function(scene) {
+    app.start();
+
+    // Wait until DOM is ready to bind zoom buttons
+    const zoomInBtn = document.getElementById("zoomIn");
+    const zoomOutBtn = document.getElementById("zoomOut");
+    const zoomStep = 120; // adjust zoom speed
+
+    zoomInBtn.addEventListener("click", () => {
+        // move camera toward the target
+        const dir = new THREE.Vector3();
+        dir.subVectors(app.controls.target, app.camera.position).normalize();
+        app.camera.position.addScaledVector(dir, zoomStep);
+        app.controls.update();
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+        // move camera away from the target
+        const dir = new THREE.Vector3();
+        dir.subVectors(app.controls.target, app.camera.position).normalize();
+        app.camera.position.addScaledVector(dir, -zoomStep);
+        app.controls.update();
+    });
+
+    // Compute bounding box of model
+    var box = new THREE.Box3().setFromObject(scene);
+    var size = box.getSize(new THREE.Vector3());
+    var center = box.getCenter(new THREE.Vector3());
+
+    // Position camera based on model size
+    var maxDim = Math.max(size.x, size.y, size.z);
+    app.camera.position.set(center.x, center.y - maxDim * 1.5, center.z + maxDim * 0.5);
+    app.camera.lookAt(center);
+
+    
+
+    // Initialize sun slider
+    updateSun(parseFloat(sunSlider.value), center, size);
+
+    sunSlider.addEventListener("input", function() {
+        updateSun(parseFloat(this.value), center, size);
+    });
+});
+
+</script>
+<!-- Weather Script -->
+<script>
+const apiKey = '96808fabd46410d174b3de7c69181973'; // friend's key
+const city = 'Hatfield,ZA';
+const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+const weatherLocation = document.getElementById('weather-location-text');
+const weatherTemp = document.getElementById('weather-temp-text');
+const weatherDesc = document.getElementById('weather-desc-text');
+const weatherIcon = document.getElementById('weather-icon-img');
+
+
+fetch(url)
+  .then(res => res.json())
+  .then(data => {
+
+    weatherLocation.textContent = data.name;
+    weatherTemp.textContent = `${Math.round(data.main.temp)}°C`;
+    weatherDesc.textContent = data.weather[0].description;
+    // weatherIcon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+  
+    //Construct and check the icon URL
+    const iconCode = data.weather[0].icon;
+    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    console.log("Icon URL:", iconUrl); // Click this in console to verify it works
+
+    weatherIcon.src = iconUrl;
+  })
+  .catch(err => {
+    weatherDesc.textContent = 'Unable to load';
+    console.error(err);
+  });
+
+   // Scale Bar Code
+    // ------------------------
+    const scaleBar = document.getElementById("scaleBar");
+    const scaleLabel = document.getElementById("scaleLabel");
+
+    function updateScaleBar() {
+        const camera = app.camera;
+        const rendererWidth = app.renderer.domElement.clientWidth;
+
+        const worldLength = 10; // 10 meters
+
+        const p1 = new THREE.Vector3(0, 0, 0);
+        const p2 = new THREE.Vector3(worldLength, 0, 0);
+
+        const p1NDC = p1.clone().project(camera);
+        const p2NDC = p2.clone().project(camera);
+
+        const x1 = (p1NDC.x * 0.5 + 0.5) * rendererWidth;
+        const x2 = (p2NDC.x * 0.5 + 0.5) * rendererWidth;
+
+        const pixelDistance = Math.abs(x2 - x1);
+
+        scaleBar.style.width = pixelDistance + "px";
+        const scaleMeters = (worldLength * camera.position.length()) / 200;
+        scaleLabel.textContent = `${Math.round(scaleMeters)} m`;
+    }
+
+    app.controls.addEventListener("change", updateScaleBar);
+    updateScaleBar();
+
+</script>
+
+</body>
+</html>
