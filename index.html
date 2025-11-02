@@ -30,6 +30,10 @@
   <button id="zoomOut">-</button>
 </div>
 
+<!-- Legend button -->
+<button id="legendBtn" style="position:absolute; top:320px; right:20px; z-index:1001;">Toggle Legend</button>
+
+
 
 <!-- popup -->
 <div id="popup">
@@ -113,6 +117,8 @@
   </div>
 </header>
 
+<!-- weather widget -->
+
 <div id="weather" style="
   position: absolute;
   top: 90px;
@@ -134,7 +140,45 @@
   </div>
 </div>
 
-<!-- Sun Slider -->
+
+<!-- Basemap Selector -->
+<div id="basemapSelector" style="
+  position: absolute;
+  top: 90px;
+  right: 200px;
+  background: rgb(255, 255, 255);
+  padding: 10px;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+">
+  <label for="basemap" style="font-weight: bold;">Basemap:</label>
+  <select id="basemap">
+    <option value="openStreet">OpenStreetMap</option>
+    <option value="satelite">Satellite Image</option>
+    <option value="none">No Basemap</option>
+  </select>
+</div>
+
+<!-- Legend -->
+<div id="legend" style="
+    position: absolute;
+    top: 350px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 10px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    z-index: 1000;
+">
+  <h3 style="margin-top: 0;">Legend</h3>
+  <div><span style="display:inline-block; width:15px; height:15px; background:#ff0000; margin-right:5px;"></span>Buildings</div>
+  <div><span style="display:inline-block; width:15px; height:15px; background:#00ff00; margin-right:5px;"></span>Parks</div>
+  <div><span style="display:inline-block; width:15px; height:15px; background:#0000ff; margin-right:5px;"></span>Water</div>
+</div>
+
+
 <!-- Sun Slider -->
 <div id="sunControls">
   <label for="sunSlider">Sun Position (6AM - 6PM)</label><br>
@@ -216,6 +260,12 @@ app.scene.add(sun);
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
 app.scene.add(ambientLight);
 
+
+//OSM
+let osmLayer = null;
+let satelliteLayer = null;
+
+
 // Sun slider references
 var sunSlider = document.getElementById("sunSlider");
 var sunTimeLabel = document.getElementById("sunTimeLabel");
@@ -239,9 +289,30 @@ function updateSun(hour, modelCenter, modelSize) {
 
 // Load scene
 app.loadSceneFile("./data/index/scene.js", function(scene) {
+   console.log("=== Available Layers in Scene ===");
+    if (app.scene && app.scene.children) {
+      app.scene.children.forEach(obj => {
+        if (obj.userData && obj.userData.properties && obj.userData.properties.name) {
+          console.log("Layer name:", obj.userData.properties.name);
+        }
+      });
+    }
+
+    
     app.start();
 
-    // Wait until DOM is ready to bind zoom buttons
+
+    // legend
+    const legend = document.getElementById('legend');
+    const legendBtn = document.getElementById('legendBtn');
+
+    legendBtn.addEventListener('click', () => {
+    legend.style.display = (legend.style.display === 'none') ? 'block' : 'none';
+});
+ 
+
+
+    // zoom buttons
     const zoomInBtn = document.getElementById("zoomIn");
     const zoomOutBtn = document.getElementById("zoomOut");
     const zoomStep = 120; // adjust zoom speed
@@ -280,6 +351,30 @@ app.loadSceneFile("./data/index/scene.js", function(scene) {
     sunSlider.addEventListener("input", function() {
         updateSun(parseFloat(this.value), center, size);
     });
+});
+
+
+
+
+const basemapSelect = document.getElementById("basemap");
+
+basemapSelect.addEventListener("change", () => {
+    const choice = basemapSelect.value;
+
+    if (osmLayer && satelliteLayer) {
+        if (choice === "openStreet") {
+            osmLayer.visible = true;
+            satelliteLayer.visible = false;
+        } else if (choice === "satelite") {
+            osmLayer.visible = false;
+            satelliteLayer.visible = true;
+        } else if (choice === "none") {
+            osmLayer.visible = false;
+            satelliteLayer.visible = false;
+        }
+        app.renderer.render(app.scene, app.camera); // refresh view
+        console.log("Basemap switched to:", choice);
+    }
 });
 
 </script>
@@ -347,6 +442,7 @@ fetch(url)
     updateScaleBar();
 
 </script>
+
 
 </body>
 </html>
