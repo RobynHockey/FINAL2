@@ -6,6 +6,18 @@
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <base target="_blank">
 <link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
+
+<!-- legend collapsed -->
+<style>
+  #legendContent.collapsed {
+    display: none;
+  }
+  #legendToggle.collapsed {
+    transform: rotate(-90deg);
+  }
+</style>
+
+
 <style type="text/css">
 #popup, #header, #layerpanel {
   left: 36px;
@@ -30,9 +42,73 @@
   <button id="zoomOut">-</button>
 </div>
 
-<!-- Legend button -->
-<button id="legendBtn" style="position:absolute; top:320px; right:20px; z-index:1001;">Toggle Legend</button>
 
+
+<!-- Pan control (diamond layout) -->
+<div id="panControls" style="
+  position: absolute;
+  top: 200px;
+  left: 20px;
+  width: 100px;
+  height: 100px;
+  z-index: 1001;
+">
+  <button id="panUp" style="
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    border: 1px solid #cccccc00;
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  ">▲</button>
+
+  <button id="panLeft" style="
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    border: 1px solid #cccccc00;
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  ">◀</button>
+
+  <button id="panRight" style="
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    border: 1px solid #cccccc00;
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  ">▶</button>
+
+  <button id="panDown" style="
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    border: 1px solid #cccccc00;
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  ">▼</button>
+</div>
 
 
 <!-- popup -->
@@ -117,6 +193,8 @@
   </div>
 </header>
 
+
+
 <!-- weather widget -->
 
 <div id="weather" style="
@@ -145,38 +223,40 @@
 <div id="basemapSelector" style="
   position: absolute;
   top: 90px;
-  right: 200px;
-  background: rgb(255, 255, 255);
-  padding: 10px;
-  border-radius: 8px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.776);
+  padding: 12px 16px;
+  border-radius: 10px;
   font-family: Arial, sans-serif;
   z-index: 1000;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
 ">
-  <label for="basemap" style="font-weight: bold;">Basemap:</label>
-  <select id="basemap">
+  <label for="basemap" style="
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+    color: #08381b;
+    font-size: 14px;
+  ">🗺️ Basemap:</label>
+  <select id="basemap" style="
+    width: 100%;
+    padding: 6px 10px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    background: white;
+    transition: border-color 0.2s ease;
+    outline: none;
+  ">
     <option value="openStreet">OpenStreetMap</option>
     <option value="satelite">Satellite Image</option>
     <option value="none">No Basemap</option>
   </select>
 </div>
 
-<!-- Legend -->
-<div id="legend" style="
-    position: absolute;
-    top: 350px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.85);
-    padding: 10px;
-    border-radius: 8px;
-    font-family: Arial, sans-serif;
-    z-index: 1000;
-">
-  <h3 style="margin-top: 0;">Legend</h3>
-  <div><span style="display:inline-block; width:15px; height:15px; background:#ff0000; margin-right:5px;"></span>Buildings</div>
-  <div><span style="display:inline-block; width:15px; height:15px; background:#00ff00; margin-right:5px;"></span>Parks</div>
-  <div><span style="display:inline-block; width:15px; height:15px; background:#0000ff; margin-right:5px;"></span>Water</div>
-</div>
 
 
 <!-- Sun Slider -->
@@ -184,6 +264,102 @@
   <label for="sunSlider">Sun Position (6AM - 6PM)</label><br>
   <input type="range" id="sunSlider" min="6" max="18" step="0.1" value="12">
   <span id="sunTimeLabel">12:00 PM</span>
+</div>
+
+<!-- Map Legend -->
+<div id="mapLegend" style="
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-family: Arial, sans-serif;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
+  min-width: 140px;
+  max-width: 180px;
+">
+  <div id="legendHeader" style="
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+  ">
+    <span style="font-weight: bold; font-size: 14px; color: #333;">🗺️ Map Layers</span>
+    <span id="legendToggle" style="font-size: 12px; color: #666;">▼</span>
+  </div>
+
+  <div id="legendContent" style="max-height: 400px; overflow-y: auto; font-size: 14px;">
+    <!-- Point Features -->
+    <div class="legend-section">
+      <div class="legend-section-title" style="text-decoration: underline;">Point Features </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-all-lamps" checked>
+        <span class="legend-icon">💡</span>
+        <label for="layer-all-lamps">All Lamps</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-all-benches" checked>
+        <span class="legend-icon">🪑</span>
+        <label for="layer-all-benches">All Benches</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-all-turnstiles" checked>
+        <span class="legend-icon">⛔</span>
+        <label for="layer-all-turnstiles">All Turnstiles</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-suitable-benches" checked>
+        <span class="legend-icon" style="color: #4CAF50;">✓</span>
+        <label for="layer-suitable-benches">Suitable Benches</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-suitable-lamps" checked>
+        <span class="legend-icon" style="color: #4CAF50;">✓</span>
+        <label for="layer-suitable-lamps">Suitable Lamps</label>
+      </div>
+    </div>
+
+    <!-- Line Features -->
+    <div class="legend-section">
+      <div class="legend-section-title" style="text-decoration: underline;">Line Features</div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-walkways" checked>
+        <span class="legend-icon" style="font-family: monospace; color: #888;">━</span>
+        <label for="layer-walkways">Walkways</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-ring-road" checked>
+        <span class="legend-icon" style="font-family: monospace; color: #555; font-weight: bold;">═</span>
+        <label for="layer-ring-road">Ring Road</label>
+      </div>
+    </div>
+
+    <!-- Polygon Features -->
+    <div class="legend-section">
+      <div class="legend-section-title" style="text-decoration: underline;">Polygon Features</div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-all-buildings" checked>
+        <span class="legend-icon">🏢</span>
+        <label for="layer-all-buildings">All Buildings</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-suitable-sunny-areas" checked>
+        <span class="legend-icon">☀️</span>
+        <label for="layer-suitable-sunny-areas">Suitable Sunny Areas</label>
+      </div>
+      <div class="legend-item">
+        <input type="checkbox" id="layer-proposed-tile-area" checked>
+        <span class="legend-icon" style="color: #9C27B0;">▦</span>
+        <label for="layer-proposed-tile-area">Proposed Tile Area</label>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Scale Bar - Bottom Right -->
@@ -290,25 +466,45 @@ function updateSun(hour, modelCenter, modelSize) {
 // Load scene
 app.loadSceneFile("./data/index/scene.js", function(scene) {
    console.log("=== Available Layers in Scene ===");
-    if (app.scene && app.scene.children) {
-      app.scene.children.forEach(obj => {
-        if (obj.userData && obj.userData.properties && obj.userData.properties.name) {
-          console.log("Layer name:", obj.userData.properties.name);
+
+   
+  // Layers are stored in app.scene.mapLayers, not in children
+    if (app.scene && app.scene.mapLayers) {
+      // Iterate through all layers in the scene
+      Object.keys(app.scene.mapLayers).forEach(layerId => {
+        var layer = app.scene.mapLayers[layerId];
+        if (layer.properties && layer.properties.name) {
+          console.log("Found layer:", layer.properties.name, "(ID:", layerId + ")");
+
+          // Initialize basemap layer references
+          if (layer.properties.name === "openStreet") {
+            osmLayer = layer;
+            console.log("✓ OSM layer found and assigned (ID: " + layerId + ")");
+          } else if (layer.properties.name === "satelite") {
+            satelliteLayer = layer;
+            console.log("✓ Satellite layer found and assigned (ID: " + layerId + ")");
+          }
         }
       });
     }
+
+    // Set initial visibility based on default dropdown selection (OpenStreetMap)
+    if (osmLayer && satelliteLayer) {
+      osmLayer.visible = true;
+      satelliteLayer.visible = false;
+      console.log("✓ Initial basemap visibility set: OSM visible, Satellite hidden");
+    } else {
+      console.warn("⚠ Warning: Basemap layers not found in scene!");
+      if (!osmLayer) console.warn("  - osmLayer not found");
+      if (!satelliteLayer) console.warn("  - satelliteLayer not found");
+    }
+    
 
     
     app.start();
 
 
-    // legend
-    const legend = document.getElementById('legend');
-    const legendBtn = document.getElementById('legendBtn');
 
-    legendBtn.addEventListener('click', () => {
-    legend.style.display = (legend.style.display === 'none') ? 'block' : 'none';
-});
  
 
 
@@ -333,6 +529,44 @@ app.loadSceneFile("./data/index/scene.js", function(scene) {
         app.controls.update();
     });
 
+    const panStep = 50; // how far to move per click
+
+// Reference the pan buttons
+const panLeftBtn = document.getElementById("panLeft");
+const panRightBtn = document.getElementById("panRight");
+const panUpBtn = document.getElementById("panUp");
+const panDownBtn = document.getElementById("panDown");
+
+// Pan left (west)
+panLeftBtn.addEventListener("click", () => {
+    app.camera.position.x -= panStep;
+    app.controls.target.x -= panStep;
+    app.controls.update();
+});
+
+// Pan right (east)
+panRightBtn.addEventListener("click", () => {
+    app.camera.position.x += panStep;
+    app.controls.target.x += panStep;
+    app.controls.update();
+});
+
+// Pan up (north)
+panUpBtn.addEventListener("click", () => {
+    app.camera.position.y += panStep;
+    app.controls.target.y += panStep;
+    app.controls.update();
+});
+
+// Pan down (south)
+panDownBtn.addEventListener("click", () => {
+    app.camera.position.y -= panStep;
+    app.controls.target.y -= panStep;
+    app.controls.update();
+});
+
+
+
     // Compute bounding box of model
     var box = new THREE.Box3().setFromObject(scene);
     var size = box.getSize(new THREE.Vector3());
@@ -340,7 +574,7 @@ app.loadSceneFile("./data/index/scene.js", function(scene) {
 
     // Position camera based on model size
     var maxDim = Math.max(size.x, size.y, size.z);
-    app.camera.position.set(center.x, center.y - maxDim * 1.5, center.z + maxDim * 0.5);
+    app.camera.position.set(center.x, center.y - maxDim * 0.5, center.z + maxDim * 0.3);
     app.camera.lookAt(center);
 
     
@@ -362,20 +596,149 @@ basemapSelect.addEventListener("change", () => {
     const choice = basemapSelect.value;
 
     if (osmLayer && satelliteLayer) {
+        // Update visibility based on selection
         if (choice === "openStreet") {
             osmLayer.visible = true;
             satelliteLayer.visible = false;
+            console.log("✓ Basemap switched to: OpenStreetMap");
         } else if (choice === "satelite") {
             osmLayer.visible = false;
             satelliteLayer.visible = true;
+            console.log("✓ Basemap switched to: Satellite");
         } else if (choice === "none") {
             osmLayer.visible = false;
             satelliteLayer.visible = false;
+            console.log("✓ Basemap switched to: None");
         }
-        app.renderer.render(app.scene, app.camera); // refresh view
-        console.log("Basemap switched to:", choice);
+
+        // Force re-render to show changes
+        app.renderer.render(app.scene, app.camera);
+    } else {
+        console.error("❌ Cannot switch basemap: Layers not initialized");
+        console.error("osmLayer:", osmLayer, "satelliteLayer:", satelliteLayer);
     }
 });
+
+// ===== MAP LEGEND FUNCTIONALITY =====
+
+// Layer name mapping (checkbox ID -> actual layer name in scene)
+const layerMapping = {
+    'layer-all-lamps': 'All Lamps',
+    'layer-all-benches': 'All Benches',
+    'layer-all-turnstiles': 'All Turnstiles',
+    'layer-suitable-benches': 'Suitable Benches',
+    'layer-suitable-lamps': 'Suitable Lamps',
+    'layer-walkways': 'Walkways',
+    'layer-ring-road': 'Ring Road',
+    'layer-all-buildings': 'All Buildings',
+    'layer-suitable-sunny-areas': 'Suitable Sunny Areas',
+    'layer-proposed-tile-area': 'Proposed Tile Area'
+};
+
+// Store layer references
+const layerObjects = {};
+
+// Initialize legend after scene loads
+function initializeLegend() {
+    console.log("=== Initializing Map Legend ===");
+
+    // Find and store all layer objects
+    if (app.scene && app.scene.mapLayers) {
+        Object.keys(app.scene.mapLayers).forEach(layerId => {
+            const layer = app.scene.mapLayers[layerId];
+            if (layer.properties && layer.properties.name) {
+                const layerName = layer.properties.name;
+
+                // Store layer reference
+                layerObjects[layerName] = layer;
+                console.log("Found layer:", layerName, "(ID:", layerId + ")");
+            }
+        });
+    }
+
+    // Set up checkbox event listeners
+    Object.keys(layerMapping).forEach(checkboxId => {
+        const checkbox = document.getElementById(checkboxId);
+        const layerName = layerMapping[checkboxId];
+        const legendItem = checkbox ? checkbox.closest('.legend-item') : null;
+
+        if (checkbox && layerObjects[layerName]) {
+            // Set initial checkbox state based on layer visibility
+            checkbox.checked = layerObjects[layerName].visible;
+
+            // Function to toggle layer
+            const toggleLayer = function() {
+                checkbox.checked = !checkbox.checked;
+                const layer = layerObjects[layerName];
+                layer.visible = checkbox.checked;
+
+                console.log(checkbox.checked ? "✓" : "✗", "Layer toggled:", layerName, "->", checkbox.checked ? "visible" : "hidden");
+
+                // Re-render scene
+                app.renderer.render(app.scene, app.camera);
+            };
+
+            // Click on entire row toggles the checkbox
+            if (legendItem) {
+                legendItem.addEventListener('click', function(e) {
+                    // Only toggle if not clicking directly on checkbox
+                    // (checkbox handles its own toggle)
+                    if (e.target !== checkbox) {
+                        toggleLayer();
+                    }
+                });
+            }
+
+            // Handle direct checkbox changes
+            checkbox.addEventListener('change', function() {
+                const layer = layerObjects[layerName];
+                layer.visible = this.checked;
+
+                console.log(this.checked ? "✓" : "✗", "Layer toggled:", layerName, "->", this.checked ? "visible" : "hidden");
+
+                // Re-render scene
+                app.renderer.render(app.scene, app.camera);
+            });
+
+            console.log("✓ Legend control linked:", layerName);
+        } else {
+            if (!checkbox) console.warn("⚠ Checkbox not found:", checkboxId);
+            if (!layerObjects[layerName]) console.warn("⚠ Layer not found:", layerName);
+        }
+    });
+
+    // Collapse/Expand functionality
+    const legendHeader = document.getElementById('legendHeader');
+    const legendContent = document.getElementById('legendContent');
+    const legendToggle = document.getElementById('legendToggle');
+    let isCollapsed = true;
+
+    // Start collapsed
+legendContent.classList.add('collapsed');
+legendToggle.classList.add('collapsed');
+legendToggle.textContent = '▶';
+
+    legendHeader.addEventListener('click', function() {
+        isCollapsed = !isCollapsed;
+
+        if (isCollapsed) {
+            legendContent.classList.add('collapsed');
+            legendToggle.classList.add('collapsed');
+            legendToggle.textContent = '▶';
+        } else {
+            legendContent.classList.remove('collapsed');
+            legendToggle.classList.remove('collapsed');
+            legendToggle.textContent = '▼';
+        }
+    });
+
+    console.log("✓ Map legend initialized successfully!");
+}
+
+// Call initializeLegend after scene is fully loaded
+// We'll add this call inside the loadSceneFile callback
+setTimeout(initializeLegend, 1000); // Delay to ensure scene is fully loaded
+
 
 </script>
 <!-- Weather Script -->
