@@ -3773,6 +3773,8 @@ class Q3DLineLayer extends Q3DVectorLayer {
 				for (var i = 1, l = points.length; i < l; i++) {
 					pt1.fromArray(points[i]);
 
+					
+
 					mesh = new THREE.Mesh(cylinGeom, materials.mtl(f.mtl.idx));
 					mesh.scale.set(f.geom.r, pt0.distanceTo(pt1), f.geom.r);
 					mesh.position.set((pt0.x + pt1.x) / 2, (pt0.y + pt1.y) / 2, (pt0.z + pt1.z) / 2);

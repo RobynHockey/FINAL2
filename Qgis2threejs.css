@@ -554,13 +554,15 @@ table.measure tr > td:nth-child(2) {
 
 #sunControls label {
     color: rgb(8, 69, 25);
-    
+    font-weight: bold;
+    font-size: 15px;
     display: block;
-    margin-bottom: -6px;
+    margin-bottom: -11px;
 }
 
 #sunControls input[type=range] {
     width: 100%;
+
 }
 
 #sunControls span {
@@ -604,6 +606,7 @@ table.measure tr > td:nth-child(2) {
   width: 150px;
   text-align: center;
   font-family: sans-serif;
+  
 }
 
 #weather img {
@@ -636,4 +639,14 @@ table.measure tr > td:nth-child(2) {
 
 
 
+/* Subtle pulsing effect when playing */
+.pulse {
+  animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 5px #085429; }
+  50% { box-shadow: 0 0 20px #085429; }
+  100% { box-shadow: 0 0 5px #085429; }
+}
 
