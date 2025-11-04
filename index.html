@@ -265,7 +265,7 @@
 <div id="sunControls">
   <label for="sunSlider">Sun Position (6AM - 6PM)</label><br>
   <input type="range" id="sunSlider" min="6" max="18" step="0.1" value="12">
-  <span id="sunTimeLabel" style= "font-size: 15px">9:00 AM</span>
+  <span id="sunTimeLabel" style= "font-size: 15px">12:00 PM</span>
 </div>
 
 <!-- Map Legend -->
@@ -557,11 +557,7 @@ function updateSun(hour, modelCenter, modelSize) {
     var period = (hour < 12) ? "AM" : "PM";
     sunTimeLabel.textContent = displayHour + ":00 " + period;
 
-    // Set initial sun time to 9 AM
-var initialHour = 9;
-sunSlider.value = initialHour; // make the slider match
-updateSun(initialHour, modelCenter, modelSize);
-
+    
     // Move sun along an arc
     var theta = ((hour - 6) / 12) * Math.PI;
     var radius = Math.max(modelSize.x, modelSize.y, modelSize.z) * 1.5;
