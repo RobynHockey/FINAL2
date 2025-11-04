@@ -280,6 +280,7 @@
   backdrop-filter: blur(10px);
   min-width: 140px;
   max-width: 180px;
+  flex-direction: column-reverse;
 ">
   <div id="legendHeader" style="
     display: flex;
@@ -294,7 +295,7 @@
     <span id="legendToggle" style="font-size: 12px; color: #666;">▼</span>
   </div>
 
-  <div id="legendContent" style="max-height: 400px; overflow-y: auto; font-size: 14px;">
+  <div id="legendContent" style="max-height: 400px; overflow-y: auto; font-size: 14px; ">
     <!-- Point Features -->
     <div class="legend-section">
       <div class="legend-section-title" style="text-decoration: underline;">Point Features </div>
@@ -393,7 +394,6 @@
       display: inline-block;
   ">10 m</div>
 </div>
-
 
 
 
@@ -506,6 +506,7 @@ app.loadSceneFile("./data/index/scene.js", function(scene) {
 
 
  
+   
 
 
     // zoom buttons
